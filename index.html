@@ -1,0 +1,1202 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>RS Music — 100% Offline Pure Audio Player | RS STUDIOZ</title>
+  <meta name="description" content="RS Music (com.rsmusic.rs_music) — A lightweight, 100% offline, zero-ads Android music player crafted in Flutter by Rohit Kumar / RS STUDIOZ." />
+
+  <!-- Google Fonts: Inter & Space Grotesk & JetBrains Mono -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&family=Space+Grotesk:wght@600;700;800&display=swap" rel="stylesheet" />
+
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+            display: ['Space Grotesk', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace'],
+          },
+          colors: {
+            oled: '#06080F',
+            surface: '#0D1117',
+            neonCyan: '#00F5FF',
+            neonPink: '#FF007F',
+            neonPurple: '#8B5CF6',
+          },
+          animation: {
+            'spin-slow': 'spin 8s linear infinite',
+            'pulse-glow': 'pulseGlow 3s ease-in-out infinite',
+            'float': 'float 6s ease-in-out infinite',
+          },
+          keyframes: {
+            pulseGlow: {
+              '0%, 100%': { opacity: 0.65, transform: 'scale(1)' },
+              '50%': { opacity: 1, transform: 'scale(1.04)' },
+            },
+            float: {
+              '0%, 100%': { transform: 'translateY(0px)' },
+              '50%': { transform: 'translateY(-12px)' },
+            }
+          }
+        }
+      }
+    };
+  </script>
+
+  <style>
+    /* Custom Cyberpunk OLED Styling */
+    :root {
+      --cyan: #00F5FF;
+      --pink: #FF007F;
+      --purple: #8B5CF6;
+      --bg-oled: #06080F;
+    }
+
+    body {
+      background-color: var(--bg-oled);
+      color: #F8FAFC;
+      overflow-x: hidden;
+      selection-background-color: rgba(0, 245, 255, 0.25);
+    }
+
+    /* Custom Scrollbar */
+    ::-webkit-scrollbar {
+      width: 8px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #06080F;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: linear-gradient(180deg, #00F5FF, #8B5CF6, #FF007F);
+      border-radius: 9999px;
+    }
+
+    /* Glassmorphism Cards */
+    .glass-card {
+      background: rgba(13, 17, 23, 0.68);
+      backdrop-filter: blur(18px);
+      -webkit-backdrop-filter: blur(18px);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.55);
+    }
+
+    .glass-card-neon {
+      background: linear-gradient(145deg, rgba(16, 22, 34, 0.78), rgba(8, 11, 18, 0.88));
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid rgba(0, 245, 255, 0.18);
+      box-shadow: 0 0 35px rgba(0, 245, 255, 0.06), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+    }
+
+    /* Neon Text & Button Glows */
+    .text-gradient-cyber {
+      background: linear-gradient(135deg, #00F5FF 0%, #8B5CF6 50%, #FF007F 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .btn-cyber {
+      background: linear-gradient(135deg, #00F5FF 0%, #8B5CF6 55%, #FF007F 100%);
+      background-size: 200% 200%;
+      transition: all 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+      box-shadow: 0 0 24px rgba(0, 245, 255, 0.35), 0 0 40px rgba(255, 0, 127, 0.2);
+    }
+
+    .btn-cyber:hover {
+      background-position: right center;
+      transform: translateY(-2px) scale(1.02);
+      box-shadow: 0 0 32px rgba(0, 245, 255, 0.55), 0 0 55px rgba(255, 0, 127, 0.35);
+    }
+
+    /* 3D Perspective Stage */
+    .perspective-stage {
+      perspective: 1400px;
+    }
+
+    .phone-3d-wrapper {
+      transform-style: preserve-3d;
+      transition: transform 0.15s ease-out;
+      will-change: transform;
+    }
+
+    .phone-bezel {
+      background: linear-gradient(145deg, #1b2232, #090c14);
+      box-shadow:
+        0 30px 70px rgba(0, 0, 0, 0.85),
+        0 0 45px rgba(0, 245, 255, 0.18),
+        0 0 75px rgba(255, 0, 127, 0.14),
+        inset 0 0 0 2px rgba(255, 255, 255, 0.12);
+    }
+
+    /* 3D Tilt Feature Card */
+    .tilt-card {
+      transform-style: preserve-3d;
+      transition: transform 0.2s ease-out, border-color 0.3s ease, box-shadow 0.3s ease;
+    }
+    .tilt-card:hover {
+      border-color: rgba(0, 245, 255, 0.45);
+      box-shadow: 0 20px 45px rgba(0, 0, 0, 0.65), 0 0 25px rgba(0, 245, 255, 0.15);
+    }
+
+    /* Vinyl Disc Groove Effect */
+    .vinyl-disc {
+      background:
+        radial-gradient(circle at center, #06080F 0 16%, #00F5FF 17% 19%, #111827 20% 34%, rgba(255,255,255,0.06) 35% 36%, #0B0F19 37% 52%, rgba(0,245,255,0.12) 53% 54%, #0D1117 55% 74%, rgba(255,0,127,0.18) 75% 76%, #090D16 77% 100%);
+      box-shadow: 0 0 28px rgba(0, 245, 255, 0.28), inset 0 0 12px rgba(255, 0, 127, 0.3);
+    }
+
+    /* Equalizer Bars */
+    .eq-bar {
+      transition: height 0.12s ease;
+    }
+
+    /* Hide scrollbar inside mini phone list */
+    .no-scrollbar::-webkit-scrollbar {
+      display: none;
+    }
+    .no-scrollbar {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+  </style>
+</head>
+
+<body class="antialiased selection:text-cyan-200">
+  <!-- Interactive 3D Particle & Equalizer Canvas Background -->
+  <canvas id="bg-canvas" class="fixed inset-0 w-full h-full pointer-events-none z-0"></canvas>
+
+  <!-- Ambient Cyberpunk Glow Orbs -->
+  <div class="fixed top-[-120px] left-[-100px] w-[420px] h-[420px] rounded-full bg-cyan-500/10 blur-[130px] pointer-events-none z-0"></div>
+  <div class="fixed bottom-[-120px] right-[-100px] w-[460px] h-[460px] rounded-full bg-pink-600/10 blur-[140px] pointer-events-none z-0"></div>
+  <div class="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[540px] h-[540px] rounded-full bg-purple-600/5 blur-[160px] pointer-events-none z-0"></div>
+
+  <!-- Sticky Glassmorphic Navbar -->
+  <header class="sticky top-0 z-40 border-b border-white/10 bg-[#06080F]/75 backdrop-blur-xl">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 sm:h-20 flex items-center justify-between">
+      <!-- Brand Logo -->
+      <a href="#" class="flex items-center gap-3 group">
+        <div class="relative w-10 h-10 rounded-xl bg-gradient-to-br from-cyan-400 via-purple-500 to-pink-500 p-[1.5px] shadow-[0_0_20px_rgba(0,245,255,0.4)] group-hover:shadow-[0_0_28px_rgba(255,0,127,0.6)] transition-all">
+          <div class="w-full h-full rounded-[10px] bg-[#06080F] flex items-center justify-center">
+            <!-- Custom Neon Headphones + Waveform SVG -->
+            <svg class="w-5 h-5 text-cyan-400 group-hover:scale-110 transition-transform" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M3 18v-6a9 9 0 0 1 18 0v6" />
+              <path d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3zM3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z" />
+              <path d="M10 14v-3M12 15v-5M14 14v-3" stroke="#FF007F" />
+            </svg>
+          </div>
+        </div>
+        <div>
+          <span class="font-display font-extrabold text-xl tracking-wider text-white flex items-center gap-1.5">
+            RS <span class="text-gradient-cyber">MUSIC</span>
+          </span>
+          <span class="block text-[10px] font-mono tracking-widest text-slate-400 uppercase -mt-1">by RS STUDIOZ</span>
+        </div>
+      </a>
+
+      <!-- Desktop Navigation Links -->
+      <nav class="hidden md:flex items-center gap-8 text-sm font-medium text-slate-300">
+        <a href="#features" class="hover:text-cyan-400 transition-colors">Features</a>
+        <a href="#sandbox" class="hover:text-cyan-400 transition-colors">Interactive Player</a>
+        <a href="#download" class="hover:text-cyan-400 transition-colors">Download &amp; Install</a>
+      </nav>
+
+      <!-- Direct Download CTA -->
+      <div class="flex items-center gap-3">
+        <button onclick="triggerApkDownload()" class="btn-cyber text-slate-950 font-bold text-xs sm:text-sm px-4 sm:px-5 py-2.5 rounded-xl flex items-center gap-2 cursor-pointer">
+          <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+            <polyline points="7 10 12 15 17 10" />
+            <line x1="12" y1="15" x2="12" y2="3" />
+          </svg>
+          <span>Download APK</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main class="relative z-10">
+    <!-- ==================== 1. HERO SECTION WITH 3D TILT PHONE MOCKUP ==================== -->
+    <section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-10 pb-20 lg:pt-16 lg:pb-28">
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-10 items-center">
+        
+        <!-- Left Column: Value Proposition & Download CTA -->
+        <div class="lg:col-span-7 space-y-7 text-center lg:text-left">
+          <!-- Pill Badge -->
+          <div class="inline-flex items-center gap-2.5 px-4 py-1.5 rounded-full glass-card border border-cyan-400/30 text-xs sm:text-sm font-medium text-cyan-300 shadow-[0_0_20px_rgba(0,245,255,0.15)]">
+            <span class="w-2 h-2 rounded-full bg-cyan-400 animate-ping"></span>
+            <span>100% Offline &bull; Zero Ads &bull; Local Library</span>
+          </div>
+
+          <!-- Bold Gradient Headline -->
+          <h1 class="font-display font-extrabold text-4xl sm:text-5xl lg:text-6xl xl:text-7xl tracking-tight leading-[1.08] text-white">
+            Your Music,<br />
+            <span class="text-gradient-cyber">Pure &amp; Unplugged.</span>
+          </h1>
+
+          <!-- Concise Value Proposition -->
+          <p class="text-slate-300 text-base sm:text-lg lg:text-xl max-w-2xl mx-auto lg:mx-0 leading-relaxed">
+            Engineered in Flutter for audiophiles who hate subscriptions, ads, and buffering. 
+            <strong class="text-white font-semibold">RS Music</strong> scans your local storage in milliseconds with seamless background playback, Bluetooth lock-screen controls, and a battery-saving OLED interface.
+          </p>
+
+          <!-- Primary & Secondary CTA Buttons -->
+          <div class="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4 pt-2">
+            <button onclick="triggerApkDownload()" class="w-full sm:w-auto btn-cyber text-slate-950 font-extrabold text-base px-7 py-4 rounded-2xl flex items-center justify-center gap-3 cursor-pointer">
+              <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                <polyline points="7 10 12 15 17 10" />
+                <line x1="12" y1="15" x2="12" y2="3" />
+              </svg>
+              <span>Download APK (v1.0.0)</span>
+            </button>
+
+            <a href="#sandbox" class="w-full sm:w-auto px-6 py-4 rounded-2xl glass-card hover:border-pink-500/50 text-white font-semibold text-base flex items-center justify-center gap-2.5 transition-all hover:bg-white/5">
+              <svg class="w-5 h-5 text-pink-400" viewBox="0 0 24 24" fill="currentColor">
+                <polygon points="5 3 19 12 5 21 5 3" />
+              </svg>
+              <span>Try Live Audio Demo</span>
+            </a>
+          </div>
+
+          <!-- Version & Architecture Metadata Pills -->
+          <div class="flex flex-wrap items-center justify-center lg:justify-start gap-3 pt-1 text-xs font-mono text-slate-400">
+            <span class="px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-cyan-300">v1.0.0 Stable</span>
+            <span class="px-3 py-1.5 rounded-lg bg-white/5 border border-white/10">Android 7.0+</span>
+            <span class="px-3 py-1.5 rounded-lg bg-white/5 border border-white/10">Universal</span>
+            <span class="px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-pink-300">com.rsmusic.rs_music</span>
+          </div>
+        </div>
+
+        <!-- Right Column: Interactive 3D Perspective Smartphone Mockup -->
+        <div class="lg:col-span-5 flex justify-center perspective-stage">
+          <div id="hero-phone-container" class="relative w-[310px] sm:w-[340px] cursor-grab active:cursor-grabbing select-none">
+            <!-- Outer Floating Neon Halo -->
+            <div class="absolute -inset-4 rounded-[46px] bg-gradient-to-tr from-cyan-500/25 via-purple-500/20 to-pink-500/25 blur-2xl pointer-events-none"></div>
+
+            <!-- 3D Tilt Phone Body -->
+            <div id="hero-phone-3d" class="phone-3d-wrapper phone-bezel relative rounded-[42px] p-3">
+              <!-- Dynamic Island / Speaker Notch -->
+              <div class="w-24 h-5 bg-black rounded-full mx-auto mb-2 flex items-center justify-between px-3 border border-white/5">
+                <span class="w-2 h-2 rounded-full bg-cyan-400/80"></span>
+                <span class="w-8 h-1 rounded-full bg-slate-800"></span>
+              </div>
+
+              <!-- Inner App Screen (Supports OLED Dark & Crisp Light Toggle) -->
+              <div id="phone-screen" class="rounded-[30px] overflow-hidden transition-colors duration-300 bg-[#070A12] text-white border border-white/10">
+                
+                <!-- App Top Header -->
+                <div class="px-4 pt-3 pb-2 flex items-center justify-between">
+                  <div>
+                    <div class="flex items-center gap-1.5">
+                      <span class="font-display font-bold text-sm tracking-wide">RS Music</span>
+                      <span class="text-[9px] px-1.5 py-0.5 rounded bg-cyan-500/20 text-cyan-300 font-mono">OFFLINE</span>
+                    </div>
+                    <p id="phone-subtitle" class="text-[10px] text-slate-400">128 Local Tracks &bull; Lossless</p>
+                  </div>
+
+                  <!-- Theme Toggle Inside Phone Screen -->
+                  <button onclick="toggleAppTheme()" title="Toggle OLED Dark / Light Theme" class="p-2 rounded-xl bg-white/10 hover:bg-cyan-500/20 transition-colors cursor-pointer">
+                    <svg id="phone-theme-icon" class="w-4 h-4 text-cyan-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <circle cx="12" cy="12" r="5" />
+                      <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42" />
+                    </svg>
+                  </button>
+                </div>
+
+                <!-- Library Navigation Tabs -->
+                <div id="phone-tabs" class="px-3 py-1.5 flex items-center gap-1 text-[10px] font-semibold overflow-x-auto no-scrollbar">
+                  <button onclick="switchPhoneTab('songs', this)" class="phone-tab-btn px-2.5 py-1 rounded-lg bg-gradient-to-r from-cyan-400 to-purple-500 text-slate-950 font-bold whitespace-nowrap cursor-pointer">All Songs</button>
+                  <button onclick="switchPhoneTab('folders', this)" class="phone-tab-btn px-2.5 py-1 rounded-lg bg-white/5 text-slate-400 hover:text-white whitespace-nowrap cursor-pointer">Folders</button>
+                  <button onclick="switchPhoneTab('playlists', this)" class="phone-tab-btn px-2.5 py-1 rounded-lg bg-white/5 text-slate-400 hover:text-white whitespace-nowrap cursor-pointer">Playlists</button>
+                  <button onclick="switchPhoneTab('favorites', this)" class="phone-tab-btn px-2.5 py-1 rounded-lg bg-white/5 text-slate-400 hover:text-white whitespace-nowrap cursor-pointer">Favorites</button>
+                </div>
+
+                <!-- Spinning Vinyl Album Art & Live Equalizer -->
+                <div class="px-4 py-3 flex flex-col items-center">
+                  <div class="relative w-32 h-32 flex items-center justify-center">
+                    <!-- Glowing Ring -->
+                    <div id="disc-glow" class="absolute inset-0 rounded-full bg-gradient-to-tr from-cyan-400 via-purple-500 to-pink-500 blur-md opacity-40 transition-opacity"></div>
+                    <!-- Vinyl Disc -->
+                    <div id="phone-vinyl" class="vinyl-disc relative w-28 h-28 rounded-full flex items-center justify-center border border-white/15">
+                      <div class="w-9 h-9 rounded-full bg-gradient-to-br from-cyan-400 to-pink-500 flex items-center justify-center shadow-inner">
+                        <div class="w-2.5 h-2.5 rounded-full bg-[#06080F]"></div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Active Track Title & Artist -->
+                  <div class="text-center mt-2.5">
+                    <h3 id="phone-track-title" class="font-display font-bold text-sm tracking-tight truncate max-w-[230px]">Midnight Cyberpunk</h3>
+                    <p id="phone-track-artist" class="text-[11px] text-cyan-400 font-medium">RS STUDIOZ &bull; 320kbps FLAC</p>
+                  </div>
+
+                  <!-- Animated Equalizer Bars -->
+                  <div id="phone-eq" class="h-6 flex items-end justify-center gap-1 mt-2">
+                    <span class="eq-bar w-1 h-2 bg-cyan-400 rounded-full"></span>
+                    <span class="eq-bar w-1 h-4 bg-purple-400 rounded-full"></span>
+                    <span class="eq-bar w-1 h-3 bg-pink-500 rounded-full"></span>
+                    <span class="eq-bar w-1 h-5 bg-cyan-400 rounded-full"></span>
+                    <span class="eq-bar w-1 h-2 bg-purple-400 rounded-full"></span>
+                    <span class="eq-bar w-1 h-4 bg-pink-500 rounded-full"></span>
+                    <span class="eq-bar w-1 h-3 bg-cyan-400 rounded-full"></span>
+                    <span class="eq-bar w-1 h-5 bg-pink-500 rounded-full"></span>
+                    <span class="eq-bar w-1 h-2 bg-purple-400 rounded-full"></span>
+                  </div>
+                </div>
+
+                <!-- Mini Track List inside Phone -->
+                <div id="phone-track-list" class="px-3 pb-2 space-y-1.5 max-h-[116px] overflow-y-auto no-scrollbar">
+                  <!-- Populated dynamically via JS -->
+                </div>
+
+                <!-- Bottom Mini Player Controls -->
+                <div id="phone-controls-bar" class="px-4 py-3 bg-white/[0.04] border-t border-white/10">
+                  <!-- Progress Bar -->
+                  <div class="w-full h-1 bg-white/10 rounded-full overflow-hidden mb-2.5">
+                    <div id="phone-progress" class="h-full w-1/3 bg-gradient-to-r from-cyan-400 via-purple-500 to-pink-500 rounded-full transition-all duration-200"></div>
+                  </div>
+
+                  <div class="flex items-center justify-between">
+                    <span id="phone-time-cur" class="text-[10px] font-mono text-slate-400">0:42</span>
+                    <div class="flex items-center gap-4">
+                      <button onclick="prevTrack()" aria-label="Previous Track" class="text-slate-300 hover:text-cyan-400 transition-colors cursor-pointer">
+                        <svg class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor"><polygon points="19 20 9 12 19 4 19 20"/><line x1="5" y1="19" x2="5" y2="5" stroke="currentColor" stroke-width="2"/></svg>
+                      </button>
+
+                      <button onclick="togglePlay()" id="phone-play-btn" aria-label="Play or Pause" class="w-9 h-9 rounded-full bg-gradient-to-r from-cyan-400 to-pink-500 text-slate-950 flex items-center justify-center shadow-[0_0_16px_rgba(0,245,255,0.5)] hover:scale-105 transition-transform cursor-pointer">
+                        <svg id="phone-play-icon" class="w-4 h-4 ml-0.5" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+                      </button>
+
+                      <button onclick="nextTrack()" aria-label="Next Track" class="text-slate-300 hover:text-cyan-400 transition-colors cursor-pointer">
+                        <svg class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 4 15 12 5 20 5 4"/><line x1="19" y1="5" x2="19" y2="19" stroke="currentColor" stroke-width="2"/></svg>
+                      </button>
+                    </div>
+                    <span id="phone-time-dur" class="text-[10px] font-mono text-slate-400">3:18</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Interactive 3D Hint Caption -->
+            <p class="text-center text-xs font-mono text-slate-400 mt-4 flex items-center justify-center gap-1.5">
+              <span class="text-cyan-400">&#10022;</span> Move cursor or tilt &bull; Tap Play to test Web Audio synth
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== 2. INTERACTIVE AUDIO & FEATURE SANDBOX ==================== -->
+    <section id="sandbox" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-24">
+      <div class="text-center max-w-3xl mx-auto mb-12 space-y-3">
+        <span class="text-xs font-mono uppercase tracking-widest text-pink-400">Live Interactive Deck</span>
+        <h2 class="font-display font-extrabold text-3xl sm:text-4xl lg:text-5xl text-white">
+          Experience <span class="text-gradient-cyber">RS Music</span> Live
+        </h2>
+        <p class="text-slate-400 text-sm sm:text-base">
+          Test the real-time Web Audio ambient synthesizer, switch tracks, set a Sleep Timer, or preview OLED Dark vs. Crisp Daylight mode right in your browser.
+        </p>
+      </div>
+
+      <!-- 3D Glassmorphic Audio Deck -->
+      <div class="glass-card-neon rounded-3xl p-6 sm:p-8 lg:p-10 relative overflow-hidden">
+        <!-- Decorative Top Neon Line -->
+        <div class="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-cyan-400 to-transparent"></div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
+          <!-- Left: Track Selector & Live Visualizer -->
+          <div class="lg:col-span-7 space-y-5">
+            <div class="flex flex-wrap items-center justify-between gap-3">
+              <div class="flex items-center gap-2.5">
+                <span class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                <span class="text-xs font-mono uppercase tracking-wider text-slate-300">Web Audio Synth Engine Ready</span>
+              </div>
+
+              <!-- Status Badges (Bluetooth & Background Service) -->
+              <div class="flex items-center gap-2">
+                <button onclick="toggleBadge('bt')" id="badge-bt" class="px-3 py-1 rounded-full text-xs font-mono bg-cyan-500/15 text-cyan-300 border border-cyan-400/30 flex items-center gap-1.5 cursor-pointer hover:bg-cyan-500/25 transition-colors">
+                  <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6.5 6.5 17.5 17.5 12 23 12 1 17.5 6.5 6.5 17.5"/></svg>
+                  <span>TWS Connected</span>
+                </button>
+                <button onclick="toggleBadge('bg')" id="badge-bg" class="px-3 py-1 rounded-full text-xs font-mono bg-purple-500/15 text-purple-300 border border-purple-400/30 flex items-center gap-1.5 cursor-pointer hover:bg-purple-500/25 transition-colors">
+                  <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20M2 12h20"/></svg>
+                  <span>BG Service Active</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- Sample Tracks Deck -->
+            <div class="space-y-3" id="sandbox-track-list">
+              <!-- Track 0 -->
+              <div onclick="selectTrack(0)" id="sandbox-track-0" class="sandbox-track-item p-4 rounded-2xl border border-cyan-400/40 bg-cyan-500/10 flex items-center justify-between cursor-pointer transition-all">
+                <div class="flex items-center gap-4">
+                  <div class="w-11 h-11 rounded-xl bg-gradient-to-br from-cyan-400 to-purple-600 flex items-center justify-center text-slate-950 font-bold shadow-lg">
+                    01
+                  </div>
+                  <div>
+                    <h4 class="font-display font-bold text-white text-base">Midnight Cyberpunk</h4>
+                    <p class="text-xs text-slate-400">RS STUDIOZ &bull; Synthwave &bull; 118 BPM</p>
+                  </div>
+                </div>
+                <span class="text-xs font-mono text-cyan-300">3:18</span>
+              </div>
+
+              <!-- Track 1 -->
+              <div onclick="selectTrack(1)" id="sandbox-track-1" class="sandbox-track-item p-4 rounded-2xl border border-white/10 bg-white/[0.03] hover:bg-white/[0.06] flex items-center justify-between cursor-pointer transition-all">
+                <div class="flex items-center gap-4">
+                  <div class="w-11 h-11 rounded-xl bg-gradient-to-br from-pink-500 to-purple-600 flex items-center justify-center text-white font-bold shadow-lg">
+                    02
+                  </div>
+                  <div>
+                    <h4 class="font-display font-bold text-white text-base">Neon Rain Lo-Fi</h4>
+                    <p class="text-xs text-slate-400">Rohit Kumar &bull; Chill Beats &bull; 85 BPM</p>
+                  </div>
+                </div>
+                <span class="text-xs font-mono text-slate-400">2:45</span>
+              </div>
+
+              <!-- Track 2 -->
+              <div onclick="selectTrack(2)" id="sandbox-track-2" class="sandbox-track-item p-4 rounded-2xl border border-white/10 bg-white/[0.03] hover:bg-white/[0.06] flex items-center justify-between cursor-pointer transition-all">
+                <div class="flex items-center gap-4">
+                  <div class="w-11 h-11 rounded-xl bg-gradient-to-br from-purple-500 to-cyan-400 flex items-center justify-center text-slate-950 font-bold shadow-lg">
+                    03
+                  </div>
+                  <div>
+                    <h4 class="font-display font-bold text-white text-base">Shibpur Night Drive</h4>
+                    <p class="text-xs text-slate-400">RS Beats &bull; Ambient Bass &bull; 102 BPM</p>
+                  </div>
+                </div>
+                <span class="text-xs font-mono text-slate-400">4:02</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Right: Interactive Equalizer, Sleep Timer & Theme Switcher -->
+          <div class="lg:col-span-5 glass-card rounded-2xl p-6 space-y-6 border border-white/10">
+            <!-- Live Spectrum Visualizer -->
+            <div>
+              <div class="flex items-center justify-between text-xs font-mono text-slate-400 mb-3">
+                <span>LIVE SPECTRUM ANALYZER</span>
+                <span id="sandbox-status-label" class="text-pink-400">PAUSED</span>
+              </div>
+              <div id="sandbox-visualizer" class="h-24 rounded-xl bg-[#05070D] border border-white/5 px-4 py-3 flex items-end justify-between gap-1.5">
+                <!-- 16 Equalizer Bars generated by JS -->
+              </div>
+            </div>
+
+            <!-- Playback Controls Row -->
+            <div class="flex items-center justify-center gap-5">
+              <button onclick="prevTrack()" class="p-3 rounded-xl bg-white/5 hover:bg-white/10 text-slate-300 hover:text-cyan-400 transition-colors cursor-pointer">
+                <svg class="w-5 h-5" viewBox="0 0 24 24" fill="currentColor"><polygon points="19 20 9 12 19 4 19 20"/><line x1="5" y1="19" x2="5" y2="5" stroke="currentColor" stroke-width="2"/></svg>
+              </button>
+
+              <button onclick="togglePlay()" id="sandbox-play-btn" class="px-7 py-3.5 rounded-2xl btn-cyber text-slate-950 font-extrabold text-sm flex items-center gap-2 cursor-pointer">
+                <svg id="sandbox-play-icon" class="w-5 h-5" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+                <span id="sandbox-play-text">Play Synth Preview</span>
+              </button>
+
+              <button onclick="nextTrack()" class="p-3 rounded-xl bg-white/5 hover:bg-white/10 text-slate-300 hover:text-cyan-400 transition-colors cursor-pointer">
+                <svg class="w-5 h-5" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 4 15 12 5 20 5 4"/><line x1="19" y1="5" x2="19" y2="19" stroke="currentColor" stroke-width="2"/></svg>
+              </button>
+            </div>
+
+            <!-- Sleep Timer & App Theme Controls -->
+            <div class="pt-2 border-t border-white/10 space-y-4">
+              <!-- Sleep Timer Selector -->
+              <div class="flex items-center justify-between gap-2">
+                <span class="text-xs font-medium text-slate-300 flex items-center gap-1.5">
+                  <svg class="w-4 h-4 text-purple-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+                  Sleep Timer:
+                </span>
+                <div class="flex items-center gap-1.5">
+                  <button onclick="setSleepTimer(15, this)" class="sleep-btn px-2.5 py-1 rounded-lg text-xs font-mono bg-white/5 hover:bg-purple-500/20 text-slate-300 border border-white/10 cursor-pointer">15m</button>
+                  <button onclick="setSleepTimer(30, this)" class="sleep-btn px-2.5 py-1 rounded-lg text-xs font-mono bg-white/5 hover:bg-purple-500/20 text-slate-300 border border-white/10 cursor-pointer">30m</button>
+                  <button onclick="setSleepTimer(60, this)" class="sleep-btn px-2.5 py-1 rounded-lg text-xs font-mono bg-white/5 hover:bg-purple-500/20 text-slate-300 border border-white/10 cursor-pointer">60m</button>
+                </div>
+              </div>
+
+              <!-- Preview UI Theme Toggle -->
+              <div class="flex items-center justify-between gap-2">
+                <span class="text-xs font-medium text-slate-300">Phone Preview UI:</span>
+                <button onclick="toggleAppTheme()" id="sandbox-theme-btn" class="px-3.5 py-1.5 rounded-lg text-xs font-mono bg-cyan-500/15 text-cyan-300 border border-cyan-400/30 hover:bg-cyan-500/25 transition-colors cursor-pointer">
+                  OLED Dark Mode Active
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== 3. CORE FEATURES GRID (3D HOVER TILT CARDS) ==================== -->
+    <section id="features" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-24">
+      <div class="text-center max-w-3xl mx-auto mb-14 space-y-3">
+        <span class="text-xs font-mono uppercase tracking-widest text-cyan-400">Built for Speed &amp; Privacy</span>
+        <h2 class="font-display font-extrabold text-3xl sm:text-4xl lg:text-5xl text-white">
+          Engineered Without <span class="text-gradient-cyber">Compromise</span>
+        </h2>
+        <p class="text-slate-400 text-sm sm:text-base">
+          Every feature in RS Music is crafted to respect your battery, storage, and listening flow.
+        </p>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
+        <!-- Feature 1 -->
+        <div class="tilt-card glass-card rounded-3xl p-7 space-y-4">
+          <div class="w-12 h-12 rounded-2xl bg-cyan-500/15 border border-cyan-400/30 flex items-center justify-center text-cyan-400">
+            <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="1" y1="1" x2="23" y2="23"/><path d="M16.72 11.06A10.94 10.94 0 0 1 19 12.55"/><path d="M5 12.55a10.94 10.94 0 0 1 5.17-2.39"/><path d="M10.71 5.05A16 16 0 0 1 22.58 9"/><path d="M1.42 9a15.91 15.91 0 0 1 4.7-2.88"/><path d="M8.53 16.11a6 6 0 0 1 6.95 0"/><line x1="12" y1="20" x2="12.01" y2="20"/></svg>
+          </div>
+          <h3 class="font-display font-bold text-xl text-white">100% Offline &amp; Ad-Free</h3>
+          <p class="text-slate-400 text-sm leading-relaxed">
+            No INTERNET permission. No banner ads, no telemetry, no accounts—just instant playback of your local audio library anywhere, even on flights.
+          </p>
+        </div>
+
+        <!-- Feature 2 -->
+        <div class="tilt-card glass-card rounded-3xl p-7 space-y-4">
+          <div class="w-12 h-12 rounded-2xl bg-pink-500/15 border border-pink-400/30 flex items-center justify-center text-pink-400">
+            <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+          </div>
+          <h3 class="font-display font-bold text-xl text-white">Smart Library Tabs</h3>
+          <p class="text-slate-400 text-sm leading-relaxed">
+            Automatically organizes your MP3, FLAC, WAV, and M4A files into clean <span class="text-slate-200">All Songs, Folders, Playlists,</span> and <span class="text-slate-200">Favorites</span> tabs.
+          </p>
+        </div>
+
+        <!-- Feature 3 -->
+        <div class="tilt-card glass-card rounded-3xl p-7 space-y-4">
+          <div class="w-12 h-12 rounded-2xl bg-purple-500/15 border border-purple-400/30 flex items-center justify-center text-purple-400">
+            <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6.5 6.5 17.5 17.5 12 23 12 1 17.5 6.5 6.5 17.5"/></svg>
+          </div>
+          <h3 class="font-display font-bold text-xl text-white">Background &amp; Bluetooth</h3>
+          <p class="text-slate-400 text-sm leading-relaxed">
+            Full Android media session integration with rich lock-screen notifications, TWS earbuds gesture support, and automatic pause on headset disconnect.
+          </p>
+        </div>
+
+        <!-- Feature 4 -->
+        <div class="tilt-card glass-card rounded-3xl p-7 space-y-4">
+          <div class="w-12 h-12 rounded-2xl bg-cyan-500/15 border border-cyan-400/30 flex items-center justify-center text-cyan-400">
+            <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+          </div>
+          <h3 class="font-display font-bold text-xl text-white">Built-in Sleep Timer</h3>
+          <p class="text-slate-400 text-sm leading-relaxed">
+            Fall asleep to your favorite tracks without draining battery all night. Set custom countdown timers to smoothly fade out and stop playback.
+          </p>
+        </div>
+
+        <!-- Feature 5 -->
+        <div class="tilt-card glass-card rounded-3xl p-7 space-y-4">
+          <div class="w-12 h-12 rounded-2xl bg-pink-500/15 border border-pink-400/30 flex items-center justify-center text-pink-400">
+            <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2"/></svg>
+          </div>
+          <h3 class="font-display font-bold text-xl text-white">Dual OLED Dark &amp; Light</h3>
+          <p class="text-slate-400 text-sm leading-relaxed">
+            Switch effortlessly between battery-saving true pitch-black AMOLED dark theme and a crisp, high-contrast daylight theme with one tap.
+          </p>
+        </div>
+
+        <!-- Feature 6 -->
+        <div class="tilt-card glass-card rounded-3xl p-7 space-y-4">
+          <div class="w-12 h-12 rounded-2xl bg-purple-500/15 border border-purple-400/30 flex items-center justify-center text-purple-400">
+            <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          </div>
+          <h3 class="font-display font-bold text-xl text-white">Instant Lightning Search</h3>
+          <p class="text-slate-400 text-sm leading-relaxed">
+            Filter thousands of songs, artists, albums, or folder paths in real time with zero lag thanks to native Flutter isolate indexing.
+          </p>
+        </div>
+        <!-- Feature 7 -->
+        <div class="tilt-card glass-card rounded-3xl p-7 space-y-4">
+          <div class="w-12 h-12 rounded-2xl bg-cyan-500/15 border border-cyan-400/30 flex items-center justify-center text-cyan-400">
+            <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h7"/></svg>
+          </div>
+          <h3 class="font-display font-bold text-xl text-white">Synced Lyrics &amp; Tag Editor</h3>
+          <p class="text-slate-400 text-sm leading-relaxed">
+            Read time-synced <code class="text-cyan-300">.lrc</code> lyrics, then edit title, artist, album, genre and album art without leaving the app.
+          </p>
+        </div>
+
+        <!-- Feature 8 -->
+        <div class="tilt-card glass-card rounded-3xl p-7 space-y-4">
+          <div class="w-12 h-12 rounded-2xl bg-purple-500/15 border border-purple-400/30 flex items-center justify-center text-purple-400">
+            <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v12m0 0l-4-4m4 4l4-4M4 17v3h16v-3"/></svg>
+          </div>
+          <h3 class="font-display font-bold text-xl text-white">Queue, Speed &amp; Backup</h3>
+          <p class="text-slate-400 text-sm leading-relaxed">
+            Reorder the playback queue, fine-tune speed from 0.5x to 2.0x, skip +/-10s, and back up playlists and settings to local files.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== 4. DIRECT DOWNLOAD & INSTALLATION GUIDE ==================== -->
+    <section id="download" class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-24">
+      <div class="glass-card-neon rounded-3xl p-6 sm:p-10 lg:p-12 border border-cyan-400/25">
+        <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-8 pb-8 border-b border-white/10">
+          <div class="space-y-3">
+            <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/15 border border-emerald-400/30 text-emerald-300 text-xs font-mono">
+              <span>&#10003; Verified Official Release</span>
+            </div>
+            <h2 class="font-display font-extrabold text-3xl sm:text-4xl text-white">
+              Download <span class="text-gradient-cyber">RS Music</span> APK
+            </h2>
+            <p class="text-slate-400 text-sm sm:text-base max-w-xl">
+              Direct GitHub Releases package signed by RS STUDIOZ. Lightweight, fast, and free forever. <a href="https://github.com/Rohitkumarsaw/Rs_Music/releases/tag/v1.0.0" target="_blank" rel="noopener" class="text-cyan-300 hover:underline">View release notes &#8599;</a>
+            </p>
+          </div>
+
+          <!-- Release File Card -->
+          <div class="glass-card rounded-2xl p-5 border border-white/10 min-w-[270px] space-y-4">
+            <div class="flex items-center justify-between">
+              <span class="font-mono text-xs text-cyan-300 font-semibold">app-release.apk (universal)</span>
+              <span class="text-xs font-mono px-2 py-0.5 rounded bg-white/10 text-slate-300">30.5 MB</span>
+            </div>
+            <div class="text-xs font-mono text-slate-400 space-y-1">
+              <div>Package: <span class="text-slate-200">com.rsmusic.rs_music</span></div>
+              <div>Min SDK: <span class="text-slate-200">Android 7.0 (API 24)</span></div>
+            </div>
+            <button onclick="triggerApkDownload()" class="w-full btn-cyber text-slate-950 font-extrabold text-sm py-3 rounded-xl flex items-center justify-center gap-2 cursor-pointer">
+              <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+              <span>Download Now</span>
+            </button>
+            <button onclick="openReleaseModal()" class="w-full mt-1 text-xs font-mono text-cyan-300 hover:underline cursor-pointer">Release details &amp; checksum</button>
+          </div>
+        </div>
+
+        <!-- Copyable GitHub Release URL Bar -->
+        <div class="mt-6 flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+          <div class="flex-1 bg-[#05070D] border border-white/10 rounded-xl px-4 py-3 font-mono text-xs text-slate-300 overflow-x-auto whitespace-nowrap">
+            https://github.com/Rohitkumarsaw/Rs_Music/releases/download/v1.0.0/app-release.apk
+          </div>
+          <button onclick="copyReleaseUrl()" class="px-5 py-3 rounded-xl bg-white/10 hover:bg-cyan-500/20 border border-white/15 text-xs font-mono font-semibold text-cyan-300 flex items-center justify-center gap-2 transition-colors cursor-pointer">
+            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+            <span>Copy Link</span>
+          </button>
+        </div>
+
+        <!-- 3-Step Quick Install Guide -->
+        <div class="mt-10 grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div class="p-5 rounded-2xl bg-white/[0.03] border border-white/10 space-y-2">
+            <span class="inline-block font-mono text-xs font-bold text-cyan-400">STEP 01</span>
+            <h4 class="font-display font-bold text-white text-base">Download APK</h4>
+            <p class="text-xs text-slate-400 leading-relaxed">
+              Tap the Download APK button above to fetch the official <code class="text-slate-200">v1.0.0</code> universal installer from GitHub Releases.
+            </p>
+          </div>
+
+          <div class="p-5 rounded-2xl bg-white/[0.03] border border-white/10 space-y-2">
+            <span class="inline-block font-mono text-xs font-bold text-purple-400">STEP 02</span>
+            <h4 class="font-display font-bold text-white text-base">Allow Unknown Sources</h4>
+            <p class="text-xs text-slate-400 leading-relaxed">
+              Open the downloaded file and enable <span class="text-slate-200">"Install from this source"</span> in your browser or file manager settings.
+            </p>
+          </div>
+
+          <div class="p-5 rounded-2xl bg-white/[0.03] border border-white/10 space-y-2">
+            <span class="inline-block font-mono text-xs font-bold text-pink-400">STEP 03</span>
+            <h4 class="font-display font-bold text-white text-base">Enjoy Offline Music</h4>
+            <p class="text-xs text-slate-400 leading-relaxed">
+              Grant storage/audio media permission once, and RS Music instantly loads your entire offline library with zero ads.
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- ==================== 5. FOOTER ==================== -->
+  <footer class="relative z-10 border-t border-white/10 bg-[#05070D]/90 backdrop-blur-lg">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 flex flex-col sm:flex-row items-center justify-between gap-6">
+      <div class="flex items-center gap-3">
+        <span class="font-display font-extrabold text-lg tracking-wider text-white">
+          RS <span class="text-gradient-cyber">MUSIC</span>
+        </span>
+        <span class="text-xs font-mono text-slate-500">&bull; RS STUDIOZ</span>
+      </div>
+
+      <div class="flex items-center gap-6 text-xs font-medium text-slate-400">
+        <a href="#features" class="hover:text-cyan-400 transition-colors">Features</a>
+        <a href="#sandbox" class="hover:text-cyan-400 transition-colors">Live Player</a>
+        <a href="#download" class="hover:text-cyan-400 transition-colors">Releases</a>
+      </div>
+
+      <p class="text-xs text-slate-400">
+        Crafted with <span class="text-pink-500">&#10084;&#65039;</span> by <span class="text-white font-semibold">Rohit Kumar</span>
+      </p>
+    </div>
+  </footer>
+
+  <!-- ==================== RELEASE DETAILS MODAL (Fallback & Info) ==================== -->
+  <div id="release-modal" class="fixed inset-0 z-50 hidden items-center justify-center p-4 bg-black/80 backdrop-blur-md">
+    <div class="glass-card-neon rounded-3xl max-w-md w-full p-6 sm:p-7 space-y-5 relative border border-cyan-400/40">
+      <button onclick="closeReleaseModal()" aria-label="Close Modal" class="absolute top-4 right-4 p-2 rounded-xl bg-white/5 hover:bg-white/10 text-slate-400 hover:text-white cursor-pointer">
+        <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+
+      <div class="flex items-center gap-3">
+        <div class="w-11 h-11 rounded-2xl bg-gradient-to-br from-cyan-400 to-pink-500 flex items-center justify-center text-slate-950 font-extrabold">
+          RS
+        </div>
+        <div>
+          <h3 class="font-display font-bold text-lg text-white">RS Music v1.0.0 Release</h3>
+          <p class="text-xs font-mono text-cyan-300">GitHub Releases &bull; Universal</p>
+        </div>
+      </div>
+
+      <div class="p-4 rounded-2xl bg-[#05070D] border border-white/10 space-y-2 text-xs font-mono text-slate-300">
+        <div class="flex justify-between"><span class="text-slate-500">File:</span> <span>app-release.apk (universal)</span></div>
+        <div class="flex justify-between"><span class="text-slate-500">Size:</span> <span>30.5 MB (31,977,281 bytes)</span></div>
+        <div class="flex justify-between"><span class="text-slate-500">Package:</span> <span>com.rsmusic.rs_music</span></div>
+        <div class="pt-1 border-t border-white/5">
+          <span class="text-slate-500 block mb-1">SHA-256 Checksum:</span>
+          <span class="text-[10px] text-cyan-400 break-all">F099CDD032FE3AF512E6EA18FC28661F3E12E88C302EFBEB32B4FDDEE63FC625</span>
+        </div>
+      </div>
+
+      <div class="flex flex-col sm:flex-row gap-3">
+        <a href="https://github.com/Rohitkumarsaw/Rs_Music/releases/download/v1.0.0/app-release.apk" target="_blank" rel="noopener noreferrer" onclick="showToast('Opening GitHub Release binary link...')" class="flex-1 btn-cyber text-slate-950 font-extrabold text-xs py-3 rounded-xl text-center">
+          Open GitHub Direct Link
+        </a>
+        <button onclick="copyReleaseUrl()" class="px-4 py-3 rounded-xl bg-white/10 hover:bg-white/15 text-white font-mono text-xs cursor-pointer">
+          Copy URL
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== TOAST NOTIFICATION CONTAINER ==================== -->
+  <div id="toast-container" class="fixed bottom-5 right-5 z-50 flex flex-col gap-2 pointer-events-none"></div>
+
+  <!-- ==================== VANILLA JS: 3D CANVAS, TILT, & WEB AUDIO SYNTH ==================== -->
+  <script>
+    // -------------------- 1. TRACK DATA & STATE --------------------
+    const tracks = [
+      {
+        title: "Midnight Cyberpunk",
+        artist: "RS STUDIOZ • 320kbps FLAC",
+        duration: "3:18",
+        folder: "Synthwave / Night",
+        favorite: true,
+        notes: [220, 261.63, 329.63, 392.00, 329.63, 293.66], // Am7 arpeggio
+        tempo: 360
+      },
+      {
+        title: "Neon Rain Lo-Fi",
+        artist: "Rohit Kumar • Lossless WAV",
+        duration: "2:45",
+        folder: "Lo-Fi / Chill",
+        favorite: true,
+        notes: [174.61, 220.00, 261.63, 329.63, 293.66, 246.94], // Fmaj9 warm chords
+        tempo: 460
+      },
+      {
+        title: "Shibpur Night Drive",
+        artist: "RS Beats • Master Audio",
+        duration: "4:02",
+        folder: "Drives / Bass",
+        favorite: false,
+        notes: [146.83, 220.00, 261.63, 329.63, 392.00, 261.63], // Dm9 deep synth
+        tempo: 400
+      }
+    ];
+
+    let currentTrackIndex = 0;
+    let isPlaying = false;
+    let isPhoneDark = true;
+    let currentTab = 'songs';
+    let progressPercent = 34;
+
+    // Web Audio API variables
+    let audioCtx = null;
+    let synthInterval = null;
+    let noteStep = 0;
+
+    // -------------------- 2. INITIALIZE UI ELEMENTS --------------------
+    const sandboxVisualizer = document.getElementById('sandbox-visualizer');
+    for (let i = 0; i < 18; i++) {
+      const bar = document.createElement('div');
+      bar.className = 'sandbox-eq-bar flex-1 rounded-full transition-all duration-150';
+      bar.style.height = '18%';
+      bar.style.background = i % 3 === 0 ? '#00F5FF' : (i % 3 === 1 ? '#8B5CF6' : '#FF007F');
+      sandboxVisualizer.appendChild(bar);
+    }
+
+    function renderPhoneTrackList() {
+      const listEl = document.getElementById('phone-track-list');
+      listEl.innerHTML = '';
+
+      let filtered = tracks.map((t, idx) => ({ ...t, idx }));
+      if (currentTab === 'favorites') {
+        filtered = filtered.filter(t => t.favorite);
+      }
+
+      filtered.forEach(item => {
+        const active = item.idx === currentTrackIndex;
+        const row = document.createElement('div');
+        row.onclick = () => selectTrack(item.idx, true);
+        row.className = `px-2.5 py-2 rounded-xl flex items-center justify-between text-xs cursor-pointer transition-all ${
+          active
+            ? (isPhoneDark ? 'bg-cyan-500/15 border border-cyan-400/40 text-white' : 'bg-cyan-500/15 border border-cyan-500/40 text-slate-900')
+            : (isPhoneDark ? 'bg-white/[0.03] hover:bg-white/[0.07] text-slate-300' : 'bg-slate-200/70 hover:bg-slate-200 text-slate-700')
+        }`;
+
+        const subLabel = currentTab === 'folders' ? item.folder : (currentTab === 'playlists' ? 'Cyberpunk Mix' : item.artist.split('•')[0]);
+        row.innerHTML = `
+          <div class="flex items-center gap-2 truncate">
+            <span class="w-1.5 h-1.5 rounded-full ${active ? 'bg-cyan-400 animate-ping' : 'bg-slate-500'}"></span>
+            <div class="truncate">
+              <div class="font-semibold truncate">${item.title}</div>
+              <div class="text-[9px] opacity-70 truncate">${subLabel}</div>
+            </div>
+          </div>
+          <span class="text-[9px] font-mono opacity-75 ml-2">${item.duration}</span>
+        `;
+        listEl.appendChild(row);
+      });
+    }
+
+    function switchPhoneTab(tab, btnEl) {
+      currentTab = tab;
+      document.querySelectorAll('.phone-tab-btn').forEach(btn => {
+        btn.className = 'phone-tab-btn px-2.5 py-1 rounded-lg bg-white/5 text-slate-400 hover:text-white whitespace-nowrap cursor-pointer';
+      });
+      btnEl.className = 'phone-tab-btn px-2.5 py-1 rounded-lg bg-gradient-to-r from-cyan-400 to-purple-500 text-slate-950 font-bold whitespace-nowrap cursor-pointer';
+      renderPhoneTrackList();
+    }
+
+    // -------------------- 3. WEB AUDIO API AMBIENT SYNTH --------------------
+    function playSynthStep() {
+      if (!audioCtx) {
+        const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+        audioCtx = new AudioContextClass();
+      }
+      if (audioCtx.state === 'suspended') {
+        audioCtx.resume();
+      }
+
+      const track = tracks[currentTrackIndex];
+      const freq = track.notes[noteStep % track.notes.length];
+      noteStep++;
+
+      const now = audioCtx.currentTime;
+      const osc = audioCtx.createOscillator();
+      const subOsc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      const filter = audioCtx.createBiquadFilter();
+
+      osc.type = 'triangle';
+      osc.frequency.setValueAtTime(freq, now);
+
+      subOsc.type = 'sine';
+      subOsc.frequency.setValueAtTime(freq / 2, now);
+
+      filter.type = 'lowpass';
+      filter.frequency.setValueAtTime(950, now);
+
+      gain.gain.setValueAtTime(0.001, now);
+      gain.gain.exponentialRampToValueAtTime(0.08, now + 0.06);
+      gain.gain.exponentialRampToValueAtTime(0.0008, now + 0.42);
+
+      osc.connect(filter);
+      subOsc.connect(filter);
+      filter.connect(gain);
+      gain.connect(audioCtx.destination);
+
+      osc.start(now);
+      subOsc.start(now);
+      osc.stop(now + 0.45);
+      subOsc.stop(now + 0.45);
+    }
+
+    function startAudioLoop() {
+      stopAudioLoop();
+      playSynthStep();
+      const track = tracks[currentTrackIndex];
+      synthInterval = setInterval(() => {
+        playSynthStep();
+        progressPercent = (progressPercent + 1.2) % 100;
+        document.getElementById('phone-progress').style.width = `${progressPercent}%`;
+      }, track.tempo);
+    }
+
+    function stopAudioLoop() {
+      if (synthInterval) {
+        clearInterval(synthInterval);
+        synthInterval = null;
+      }
+    }
+
+    // -------------------- 4. PLAYER CONTROLS & UI SYNC --------------------
+    function updatePlayerUI() {
+      const track = tracks[currentTrackIndex];
+
+      // Phone UI
+      document.getElementById('phone-track-title').textContent = track.title;
+      document.getElementById('phone-track-artist').textContent = track.artist;
+      document.getElementById('phone-time-dur').textContent = track.duration;
+
+      const vinyl = document.getElementById('phone-vinyl');
+      const playIcon = document.getElementById('phone-play-icon');
+      const sandboxPlayIcon = document.getElementById('sandbox-play-icon');
+      const sandboxPlayText = document.getElementById('sandbox-play-text');
+      const sandboxStatus = document.getElementById('sandbox-status-label');
+
+      if (isPlaying) {
+        vinyl.classList.add('animate-spin-slow');
+        playIcon.innerHTML = '<rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/>';
+        sandboxPlayIcon.innerHTML = '<rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/>';
+        sandboxPlayText.textContent = 'Pause Synth Preview';
+        sandboxStatus.textContent = 'PLAYING AUDIO';
+        sandboxStatus.className = 'text-cyan-400 font-bold';
+      } else {
+        vinyl.classList.remove('animate-spin-slow');
+        playIcon.innerHTML = '<polygon points="5 3 19 12 5 21 5 3"/>';
+        sandboxPlayIcon.innerHTML = '<polygon points="5 3 19 12 5 21 5 3"/>';
+        sandboxPlayText.textContent = 'Play Synth Preview';
+        sandboxStatus.textContent = 'PAUSED';
+        sandboxStatus.className = 'text-pink-400';
+      }
+
+      // Highlight Sandbox Track Cards
+      document.querySelectorAll('.sandbox-track-item').forEach((card, idx) => {
+        if (idx === currentTrackIndex) {
+          card.className = 'sandbox-track-item p-4 rounded-2xl border border-cyan-400/50 bg-cyan-500/10 flex items-center justify-between cursor-pointer transition-all shadow-[0_0_20px_rgba(0,245,255,0.12)]';
+        } else {
+          card.className = 'sandbox-track-item p-4 rounded-2xl border border-white/10 bg-white/[0.03] hover:bg-white/[0.06] flex items-center justify-between cursor-pointer transition-all';
+        }
+      });
+
+      renderPhoneTrackList();
+    }
+
+    function togglePlay() {
+      isPlaying = !isPlaying;
+      if (isPlaying) {
+        startAudioLoop();
+        showToast(`Playing "${tracks[currentTrackIndex].title}"`);
+      } else {
+        stopAudioLoop();
+      }
+      updatePlayerUI();
+    }
+
+    function selectTrack(index, autoPlay = true) {
+      currentTrackIndex = index;
+      noteStep = 0;
+      progressPercent = 12;
+      if (autoPlay) {
+        isPlaying = true;
+        startAudioLoop();
+      }
+      updatePlayerUI();
+    }
+
+    function nextTrack() {
+      selectTrack((currentTrackIndex + 1) % tracks.length, true);
+    }
+
+    function prevTrack() {
+      selectTrack((currentTrackIndex - 1 + tracks.length) % tracks.length, true);
+    }
+
+    // Equalizer Bar Animation Loop
+    setInterval(() => {
+      const phoneBars = document.querySelectorAll('.eq-bar');
+      const sandboxBars = document.querySelectorAll('.sandbox-eq-bar');
+
+      phoneBars.forEach((bar) => {
+        bar.style.height = isPlaying ? `${Math.floor(Math.random() * 18) + 5}px` : '5px';
+      });
+
+      sandboxBars.forEach((bar) => {
+        bar.style.height = isPlaying ? `${Math.floor(Math.random() * 78) + 16}%` : '14%';
+      });
+    }, 150);
+
+    // -------------------- 5. PHONE THEME, SLEEP TIMER & BADGES --------------------
+    function toggleAppTheme() {
+      isPhoneDark = !isPhoneDark;
+      const screen = document.getElementById('phone-screen');
+      const sandboxThemeBtn = document.getElementById('sandbox-theme-btn');
+
+      if (isPhoneDark) {
+        screen.className = 'rounded-[30px] overflow-hidden transition-colors duration-300 bg-[#070A12] text-white border border-white/10';
+        sandboxThemeBtn.textContent = 'OLED Dark Mode Active';
+        showToast('Switched to True OLED Dark Theme');
+      } else {
+        screen.className = 'rounded-[30px] overflow-hidden transition-colors duration-300 bg-slate-50 text-slate-900 border border-slate-200';
+        sandboxThemeBtn.textContent = 'Crisp Light Mode Active';
+        showToast('Switched to Crisp Daylight Theme');
+      }
+      renderPhoneTrackList();
+    }
+
+    function setSleepTimer(minutes, btn) {
+      document.querySelectorAll('.sleep-btn').forEach(b => {
+        b.className = 'sleep-btn px-2.5 py-1 rounded-lg text-xs font-mono bg-white/5 hover:bg-purple-500/20 text-slate-300 border border-white/10 cursor-pointer';
+      });
+      btn.className = 'sleep-btn px-2.5 py-1 rounded-lg text-xs font-mono bg-purple-500/30 text-purple-200 border border-purple-400 cursor-pointer';
+      showToast(`Sleep Timer set for ${minutes} minutes`);
+    }
+
+    function toggleBadge(type) {
+      if (type === 'bt') {
+        showToast('Bluetooth AVRCP media controls synced');
+      } else {
+        showToast('Android Foreground Audio Service active');
+      }
+    }
+
+    // -------------------- 6. DOWNLOAD MODAL & CLIPBOARD TOASTS --------------------
+    const RELEASE_URL = 'https://github.com/Rohitkumarsaw/Rs_Music/releases/download/v1.0.0/app-release.apk';
+
+    function triggerApkDownload() {
+      showToast('Opening official RS Music APK (30.5 MB)...');
+      window.open(RELEASE_URL, '_blank', 'noopener,noreferrer');
+    }
+
+    function openReleaseModal() {
+      const modal = document.getElementById('release-modal');
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+    }
+
+    function closeReleaseModal() {
+      const modal = document.getElementById('release-modal');
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+    }
+
+    function copyReleaseUrl() {
+      const tempInput = document.createElement('input');
+      tempInput.value = RELEASE_URL;
+      document.body.appendChild(tempInput);
+      tempInput.select();
+      document.execCommand('copy');
+      document.body.removeChild(tempInput);
+      showToast('GitHub Release URL copied to clipboard!');
+    }
+
+    function showToast(message) {
+      const container = document.getElementById('toast-container');
+      const toast = document.createElement('div');
+      toast.className = 'pointer-events-auto glass-card-neon px-4 py-3 rounded-2xl border border-cyan-400/40 text-xs sm:text-sm font-medium text-white shadow-2xl flex items-center gap-2.5 transition-all duration-300 translate-y-2 opacity-0';
+      toast.innerHTML = `
+        <span class="w-2 h-2 rounded-full bg-cyan-400"></span>
+        <span>${message}</span>
+      `;
+      container.appendChild(toast);
+
+      requestAnimationFrame(() => {
+        toast.classList.remove('translate-y-2', 'opacity-0');
+      });
+
+      setTimeout(() => {
+        toast.classList.add('translate-y-2', 'opacity-0');
+        setTimeout(() => toast.remove(), 300);
+      }, 3200);
+    }
+
+    // -------------------- 7. 3D PERSPECTIVE PHONE & CARD TILT --------------------
+    const phoneContainer = document.getElementById('hero-phone-container');
+    const phone3D = document.getElementById('hero-phone-3d');
+
+    phoneContainer.addEventListener('mousemove', (e) => {
+      const rect = phoneContainer.getBoundingClientRect();
+      const x = (e.clientX - rect.left) / rect.width - 0.5;
+      const y = (e.clientY - rect.top) / rect.height - 0.5;
+      phone3D.style.transform = `rotateY(${x * 24}deg) rotateX(${-y * 20}deg)`;
+    });
+
+    phoneContainer.addEventListener('mouseleave', () => {
+      phone3D.style.transform = 'rotateY(0deg) rotateX(0deg)';
+    });
+
+    // Feature cards subtle 3D tilt
+    document.querySelectorAll('.tilt-card').forEach(card => {
+      card.addEventListener('mousemove', (e) => {
+        const rect = card.getBoundingClientRect();
+        const x = (e.clientX - rect.left) / rect.width - 0.5;
+        const y = (e.clientY - rect.top) / rect.height - 0.5;
+        card.style.transform = `perspective(900px) rotateY(${x * 10}deg) rotateX(${-y * 10}deg) translateY(-4px)`;
+      });
+      card.addEventListener('mouseleave', () => {
+        card.style.transform = 'perspective(900px) rotateY(0deg) rotateX(0deg) translateY(0px)';
+      });
+    });
+
+    // -------------------- 8. 3D AUDIO-REACTIVE PARTICLE BACKGROUND --------------------
+    const canvas = document.getElementById('bg-canvas');
+    const ctx = canvas.getContext('2d');
+    let width = (canvas.width = window.innerWidth);
+    let height = (canvas.height = window.innerHeight);
+
+    let mouse = { x: width / 2, y: height / 2 };
+    window.addEventListener('mousemove', (e) => {
+      mouse.x = e.clientX;
+      mouse.y = e.clientY;
+    });
+
+    window.addEventListener('resize', () => {
+      width = canvas.width = window.innerWidth;
+      height = canvas.height = window.innerHeight;
+    });
+
+    const symbols = ['♪', '♫', '♬', '•', '✦'];
+    const colors = ['#00F5FF', '#FF007F', '#8B5CF6'];
+    const particles = Array.from({ length: 48 }, () => ({
+      x: Math.random() * width,
+      y: Math.random() * height,
+      z: Math.random() * 1.6 + 0.4,
+      vx: (Math.random() - 0.5) * 0.45,
+      vy: -Math.random() * 0.55 - 0.15,
+      symbol: symbols[Math.floor(Math.random() * symbols.length)],
+      color: colors[Math.floor(Math.random() * colors.length)],
+      size: Math.random() * 12 + 10
+    }));
+
+    function animateCanvas() {
+      ctx.clearRect(0, 0, width, height);
+
+      const speedBoost = isPlaying ? 2.4 : 1;
+
+      particles.forEach(p => {
+        p.x += p.vx * speedBoost;
+        p.y += p.vy * speedBoost;
+
+        // Subtle mouse parallax
+        const dx = (mouse.x - width / 2) * 0.008 * p.z;
+        const dy = (mouse.y - height / 2) * 0.008 * p.z;
+
+        if (p.y < -30) {
+          p.y = height + 30;
+          p.x = Math.random() * width;
+        }
+        if (p.x < -30) p.x = width + 30;
+        if (p.x > width + 30) p.x = -30;
+
+        ctx.save();
+        ctx.globalAlpha = isPlaying ? 0.36 : 0.18;
+        ctx.fillStyle = p.color;
+        ctx.font = `${Math.round(p.size * p.z)}px "Space Grotesk", sans-serif`;
+        ctx.fillText(p.symbol, p.x + dx, p.y + dy);
+        ctx.restore();
+      });
+
+      requestAnimationFrame(animateCanvas);
+    }
+
+    // Boot
+    renderPhoneTrackList();
+    animateCanvas();
+  </script>
+</body>
+</html>
