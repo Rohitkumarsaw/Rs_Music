@@ -41,6 +41,7 @@ No account. No ads. No analytics. No `INTERNET` permission. Every song stays on 
 
 | Source | Link |
 |---|---|
+| **Official website** | [rohitkumarsaw.github.io/Rs_Music](https://rohitkumarsaw.github.io/Rs_Music/) |
 | **Direct APK (universal)** | [Download v1.0.0 APK](https://github.com/Rohitkumarsaw/Rs_Music/releases/download/v1.0.0/app-release.apk) |
 | Release page / changelog | [GitHub release v1.0.0](https://github.com/Rohitkumarsaw/Rs_Music/releases/tag/v1.0.0) |
 | Uptodown | Coming soon (review pending) |
@@ -84,6 +85,8 @@ Rs Music contains **no `INTERNET` permission** — it cannot transmit your music
 | Usage data | Cloud sync or third-party services |
 
 All playlists, settings and library state stay in Android private app storage. Exported backup files are ordinary local files you control. Uninstalling the app removes its local data; delete exported backups yourself if you no longer need them.
+
+[Privacy policy](https://rohitkumarsaw.github.io/Rs_Music/privacy-policy.html) — hosted publicly via GitHub Pages.
 
 ---
 
